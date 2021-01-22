@@ -12,7 +12,7 @@ const welcomeCanvas = new canvas.Welcome();
 const a = "000000";
 //-----database-------
 const { Database } = require("quickmongo");
-client.db = new Database("mongodb://localhost/quickmongo");
+client.db = new Database(process.env.URL);
 
 client.commands = new Collection();
 client.aliases = new Collection();
