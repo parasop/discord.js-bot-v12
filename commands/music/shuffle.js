@@ -1,8 +1,8 @@
 module.exports = {
-    name: 'skip',
-    aliases: ['sk'],
+    name: 'shuffle',
+    aliases: ['sh'],
     category: 'Music',
-    utilisation: '{prefix}skip',
+    utilisation: '{prefix}shuffle',
 
     run: async(client, message)=> {
         if (!message.member.voice.channel) return message.channel.send(`❌ - You're not in a voice channel !`);
@@ -11,8 +11,8 @@ module.exports = {
 
         if (!client.player.getQueue(message)) return message.channel.send(`❌ - No music currently playing !`);
 
-        client.player.skip(message);
+        client.player.shuffle(message);
 
-        message.channel.send(`✅ - The current music has just been **skipped** !`);
+        return message.channel.send(`✅ - Queue shuffled **${client.player.getQueue(message).tracks.length}** song(s) !`);
     },
 };

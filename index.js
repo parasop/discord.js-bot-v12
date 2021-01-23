@@ -1,19 +1,20 @@
 const { Client, Collection } = require("discord.js");
 const { config } = require("dotenv");
 const { prefix } = require("./config.json");
-require("./server.js")
-const Discord  = require("discord.js")
+require("./server.js");
+const Discord = require("discord.js");
 const client = new Client({
-disableEveryone: true
+  disableEveryone: true
 });
 //--------WELCOME---------
-const canvas = require("discord-canvas");
-const welcomeCanvas = new canvas.Welcome();
-const a = "000000";
-//-----database-------
-const { Database } = require("quickmongo");
-client.db = new Database(process.env.URL);
+const { createCanvas, loadImage, registerFont } = require("canvas");
+//--------MUSIC - CLIENT------
+const { Player } = require('discord-player');
+const fs = require("fs")
+client.player = new Player(client);
 
+//-----database-------
+const db = require("quick.db");
 client.commands = new Collection();
 client.aliases = new Collection();
 client.queue = new Map();
@@ -22,23 +23,24 @@ client.queue = new Map();
   require(`./handlers/${handler}`)(client);
 });
 
-//If you don't know how to make it than you can  search on YT
-client.db.on("ready", () => {
-  //when database is ready!
-  console.log("CONNECTED WITH DATABASE!");
-});
-//THX FOR WATCHING
+const player = fs.readdirSync('./player').filter(file => file.endsWith('.js'));
 
-// Collections
 
-// Run the command loader
-
+for (const file of player) {
+    //console.log(`Loading discord-player event ${file}`);
+    const event = require(`./player/${file}`);
+    client.player.on(file.split(".")[0], event.bind(null, client));
+};
 client.on("ready", () => {
   console.log(`Hi, ${client.user.username} is now online!`);
 
-  client.user.setPresence("I am Devil");
+  client.user.setActivity("PARAS GAMING 🇮🇳");
 });
-
+/*client.player.on("ready",() => {
+  
+  console.log("CONNECTED WITH MUSIC CLIENT")
+  
+  })*/
 client.on("message", async message => {
   if (message.author.bot) return;
   if (!message.guild) return;
@@ -71,38 +73,98 @@ client.on("message", async message => {
   }
 });
 client.on("guildMemberAdd", async member => {
-  
-//WELCOME  CHANNEL
-  let wchannel = client.db.get(`welcome_${member.guild.id}`)
-  
-  
-  //when ever new user join it will send
-  let image = await welcomeCanvas
-    .setUsername(member.user.username)
-    .setDiscriminator(member.user.discriminator)
-    .setMemberCount(member.guild.memberCount)
-    .setGuildName(`${member.guild.name}`)
-    .setAvatar(member.user.displayAvatarURL({ format: "png" }))
+  let image = db.get(`bluebot_welcomeImage_${member.guild.id}`);
 
-    .setColor("border", a)
-    .setColor("username-box", a)
-    .setColor("disriminator-box", a)
-    .setColor("message-box", a)
-    .setColor("title", a)
-    .setColor("Avatar", a)
+  if (!image) {
+    let channel_id = db.get(`bluebot_welcomeChannel_${member.guild.id}`);
+    let channel = member.guild.channels.cache.get(channel_id);
+    if (channel === null || !channel) return;
+    let tex = db.get(`bluebot_welcomeText_${member.guild.id}`);
+    if (!tex)
+      tex = `**Welcome To \`${member.guild.name}\`\nYou are \`${member.guild.memberCount}th\` member**`;
+    let text = tex
+      .replace("{server.name}", member.guild.name)
+      .replace("{server.member.count}", member.guild.memberCount)
+      .replace("{server.id}", member.guild.id)
+      .replace(
+        "{server.human.count}",
+        member.guild.members.cache.filter(m => !m.user.bot).size
+      )
+      .replace(
+        "{server.bot.count}",
+        member.guild.members.cache.filter(m => m.user.bot).size
+      )
+      .replace("{member.name}", member.user.username)
+      .replace("{member.mention}", member)
+      .replace("{member.tag}", member.user.tag)
+      .replace("{member.id}", member.user.id)
+      .replace("{member.discriminstor}", member.user.discriminator);
+    channel.send(text);
+  }
 
-    .setBackground(
-      "https://cdn.discordapp.com/attachments/769885454265876501/779265258928865290/images_83-1.jpeg"
-    )
-    .toAttachment();
+  if (image) {
+    let user_name =
+      member.user.username.length > 9
+        ? `${member.user.username.substring(0, 9)}...`
+        : member.user.username;
+    let guild_name =
+      member.guild.name.length > 11
+        ? `${member.guild.name.substring(0, 11)}...`
+        : member.guild.name;
+    let canvas = createCanvas(1024, 450);
+    let ctx = canvas.getContext("2d");
+    let background = await loadImage(
+      "https://media.discordapp.net/attachments/740842537043886140/743030040991891476/welcome-image-blank.png?width=400&height=176"
+    );
+    ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
 
-  let attachment = new Discord.MessageAttachment(
-    image.toBuffer(),
-    "welcome.png"
-  ); //attachment  its requir buffer
+    ctx.font = "65px abraham demo";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`Hello ${user_name}#${member.user.discriminator}!`, 350, 115);
+    ctx.fillText(`Welcome to ${guild_name}`, 350, 245);
+    ctx.fillText(`You are ${member.guild.memberCount}'th member`, 350, 370);
 
-  client.channels.cache.get(wchannel).send(attachment);
-}); //WELCOME  CHANNAEL SETUP COMPLETED NOW TEST IT
+    ctx.font = "30px abraham demo";
+    ctx.fillStyle = "#ccccff";
+    ctx.fillText(` `, 157, 420);
 
+    ctx.arc(180, 227, 135, 0, Math.PI * 2, true);
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = "#3498db";
+    ctx.stroke();
+    ctx.closePath();
+    ctx.clip();
 
+    let avatar = await loadImage(
+      member.user.displayAvatarURL({ format: "png" })
+    );
+    ctx.drawImage(avatar, 45, 93, 270, 270);
+    let img = new Discord.MessageAttachment(canvas.toBuffer(), "welcome.png");
+
+    let channel_id = db.get(`bluebot_welcomeChannel_${member.guild.id}`);
+    let channel = member.guild.channels.cache.get(channel_id);
+    if (channel === null || !channel) return;
+    let tex = db.get(`bluebot_welcomeText_${member.guild.id}`);
+    if (!tex)
+      tex = `**Welcome To \`${member.guild.name}\`\nYou are \`${member.guild.memberCount}th\` member**`;
+    let text = tex
+      .replace("{server.name}", member.guild.name)
+      .replace("{server.member.count}", member.guild.memberCount)
+      .replace("{server.id}", member.guild.id)
+      .replace(
+        "{server.human.count}",
+        member.guild.members.cache.filter(m => !m.user.bot).size
+      )
+      .replace(
+        "{server.bot.count}",
+        member.guild.members.cache.filter(m => m.user.bot).size
+      )
+      .replace("{member.name}", member.user.username)
+      .replace("{member.mention}", member)
+      .replace("{member.tag}", member.user.tag)
+      .replace("{member.id}", member.user.id)
+      .replace("{member.discriminstor}", member.user.discriminator);
+    channel.send(text, img);
+  }
+});
 client.login(process.env.TOKEN);
