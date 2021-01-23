@@ -1,27 +1,19 @@
 module.exports = {
-        name: 'stop',
-        
-    run: async (client, message, args) => {
-        const { channel } = message.member.voice;
-        if (!channel){ message.channel.send("JOIN VOICE CHANNEL BEFORE USING THIS COMMANDS!")}
-        if (message.guild.me.voice.channel !== message.member.voice.channel) {
-            return message.channel.send("BE IN SAME VOICE CHANNEL");
-          }
-        const serverQueue = client.queue.get(message.guild.id);
-      try {
-        if (serverQueue) {
-        serverQueue.songs = [];
-        serverQueue.connection.dispatcher.end()
-        message.guild.me.voice.channel.leave();
-        } else {
-        channel.leave();
-        }
-        return message.channel.send({embed: {
-          description:'↪ Disconnected'}})
-      } catch {
-          serverQueue.connection.dispatcher.end();
-          await channel.leave();
-          return message.channel.send("TRY AGAIN");
-      }
-    }
+    name: 'stop',
+    aliases: ['dc'],
+    category: 'Music',
+    utilisation: '{prefix}stop',
+
+    run: async(client, message) =>{
+        if (!message.member.voice.channel) return message.channel.send(`❌- You're not in a voice channel !`);
+
+        if (message.guild.me.voice.channel && message.member.voice.channel.id !== message.guild.me.voice.channel.id) return message.channel.send(`❌- You are not in the same voice channel !`);
+
+        if (!client.player.getQueue(message)) return message.channel.send(`❌ - No music currently playing !`);
+
+        client.player.setRepeatMode(message, false);
+        client.player.stop(message);
+
+        message.channel.send(`✅ - Music **stopped** into this server !`);
+    },
 };
