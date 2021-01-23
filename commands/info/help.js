@@ -1,32 +1,59 @@
-const discord = require("discord.js");
-
+const { MessageEmbed } = require("discord.js");
+const db = require("quick.db")
 module.exports = {
   name: "help",
+  description:
+    "Get list of all command and even get to know every command detials",
+  usage: "help <cmd>",
+  category: "info",
   run: async (client, message, args) => {
-    const embed = new discord.MessageEmbed()
+    if (args[0]) {
+      const command = await client.commands.get(args[0]);
 
-      .setTitle(`${client.user.username} HELP MENU`)
+      if (!command) {
+        return message.channel.send("Unknown Command: " + args[0]);
+      }
 
-      .setThumbnail(
-        message.author.displayAvatarURL({ dynamic: true, size: 1024 })
-      )
+      let embed = new MessageEmbed()
+        .setAuthor(command.name, client.user.displayAvatarURL())
+        .addField("Description", command.description || "Not Provided :(")
+        .addField("Usage", "`" + command.usage + "`" || "Not Provied")
+        .setThumbnail(client.user.displayAvatarURL())
+        .setColor("GREEN")
+        .setFooter(client.user.username, client.user.displayAvatarURL());
 
-      .setDescription(
-        `
+      return message.channel.send(embed);
+    } else {
+      const commands = await client.commands;
 
-**MUSIC COMMANDS**
-\`play[p],search,pause,resume,stop,skip,skipall,skipto,nowplaying[np],queue,loop,remove,volume\`
+      let emx = new MessageEmbed()
+        .setDescription("PARAS GAMING  🇮🇳")
+        .setColor("GREEN")
+        .setFooter(client.user.username, client.user.displayAvatarURL())
+        .setThumbnail(client.user.displayAvatarURL());
 
+      let com = {};
+      for (let comm of commands.array()) {
+        let category = comm.category || "Unknown";
+        let name = comm.name;
 
-**INFO COMMANDS**
-\`ping,help\`
+        if (!com[category]) {
+          com[category] = [];
+        }
+        com[category].push(name);
+      }
 
-__**ABOUT BOT**__
-A POWERFUL MUSIC BOT MADE 24/7 MUSIC PLAYERS 
-13+ COMMANDS
-`
-      )
-      .setFooter(message.guild);
-    message.channel.send(embed);
+      for(const [key, value] of Object.entries(com)) {
+        let category = key;
+
+        let desc = "`" + value.join("`, `") + "`";
+
+        emx.addField(`${category.toUpperCase()}[${value.length}]`, desc);
+      }
+
+     
+
+      return message.channel.send(emx);
+    }
   }
 };
