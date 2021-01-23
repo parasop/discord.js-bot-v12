@@ -2,6 +2,7 @@ const sourcebin = require('sourcebin_js')
 
 module.exports = {
    name: 'sourcebin',
+   category: "info",
    run: async (client, message, args) => {
 
        if (!args.join(' ')) return message.reply('Please give a random code bruh')

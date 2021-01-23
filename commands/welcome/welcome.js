@@ -10,7 +10,7 @@ const path = require("path");
 module.exports = {
   name: "welcome",
   description: "Set the server welcome message",
-  category: "ADMIN",
+  category: "WELCOME",
   usage: "welcome channel/message/test set/unset/edit",
   run: async (client, message, args) => {
     
