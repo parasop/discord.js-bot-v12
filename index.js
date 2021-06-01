@@ -14,7 +14,9 @@ const fs = require("fs")
 client.player = new Player(client);
 
 //-----database-------
-const db = require("quick.db");
+const {Database} = require("quickmongo")
+//Collection
+client.db =  new Database(process.env.DB)
 client.commands = new Collection();
 client.aliases = new Collection();
 client.queue = new Map();
@@ -36,11 +38,7 @@ client.on("ready", () => {
 
   client.user.setActivity("PARAS GAMING 🇮🇳");
 });
-/*client.player.on("ready",() => {
-  
-  console.log("CONNECTED WITH MUSIC CLIENT")
-  
-  })*/
+
 client.on("message", async message => {
   if (message.author.bot) return;
   if (!message.guild) return;
