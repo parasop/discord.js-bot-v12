@@ -1,6 +1,6 @@
 const { Client, Collection } = require("discord.js");
 const { config } = require("dotenv");
-const { prefix } = require("./config.json");
+const { prefix,db,token } = require("./config.json");
 require("./server.js");
 const Discord = require("discord.js");
 const client = new Client({
@@ -16,10 +16,11 @@ client.player = new Player(client);
 //-----database-------
 const {Database} = require("quickmongo")
 //Collection
-client.db =  new Database(process.env.DB)
+client.db =  new Database(db)
 client.commands = new Collection();
 client.aliases = new Collection();
 client.queue = new Map();
+client.snipes = new Map();
 
 ["command"].forEach(handler => {
   require(`./handlers/${handler}`)(client);
@@ -38,6 +39,24 @@ client.on("ready", () => {
 
   client.user.setActivity("PARAS GAMING 🇮🇳");
 });
+
+
+client.on("messageDelete",async (message) => {
+
+
+
+
+  client.snipes.set(message.channel.id,{
+content : message.content,
+author: message.author.tag,
+image: message.attachments.first() ? message.attachments.first().proxyURL : null
+
+
+
+
+  })
+})
+
 
 
 //ANTI-MENTION
@@ -68,41 +87,6 @@ client.on("message", async message => {
   if (message.author.bot) return;
   if (!message.guild) return;
 //AFK SYSTEM 
-let afk = client.db.get(`afk_${message.guild.id}_${message.author.id}`)
- var reason;
- if(afk) {
-  
- client.db.set(`afk_${message.guild.id}_${message.author.id}`,false) 
-client.db.delete(`op_${message.guild.id}_${message.author.id}`)   
-message.reply(`WELCOME BACK AFTER LONG TIME`)  
- }
-  
-//IF SOMEONE MENTION AFK USER 
-if(message.mentions.users.size){
-  
-let op = message.mentions.users
-
-if(op.size){
-  
- let find = op.find(mentionb=> client.db.get(`op_${message.guild.id}_${mention.id}`) 
- 
- if(find) {
-   
- afk = client.db.set(`afk_${message.guild.id}_${find.id}`,reason)  
-
-let date = client.db.get(`date_${message.guild.id}_${find.id}`)   
- date = Date.now() - date 
- 
- message.channel.send(`${find.username} is currently  afk - ${reasom} ${format(${date})} ago`)
- }
-  
-  
-  
-}
-
-
-  
-}
  //IF YOU  WANT MAKE GLOABAL AFK SYSTEM  JUST  REMOVE SERVER  id
  //THAKKS FOR WATCHING 
  //DON'T  FORGET  TO JOIN SUPPORT  SERVER 
@@ -230,4 +214,4 @@ client.on("guildMemberAdd", async member => {
     channel.send(text, img);
   }
 });
-client.login(process.env.TOKEN);
+client.login(token);
