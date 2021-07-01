@@ -6,6 +6,7 @@ const Discord = require("discord.js");
 const client = new Client({
   disableEveryone: true
 });
+
 //--------WELCOME---------
 const { createCanvas, loadImage, registerFont } = require("canvas");
 //--------MUSIC - CLIENT------
