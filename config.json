@@ -1,7 +1,7 @@
 {
   "prefix" : "+",
-  "token": "ODYxODgxNzY0NjA2NzcxMjEw.YOQP8Q.UcdBdO6X_ATzVfHCG0vi0KFljr8",
-  "db": "mongodb+srv://ESPORTS:OO11C6gUCF8b3Ikl@esportss.nl393.mongodb.net/paras?retryWrites=true&w=majority",
+  "token": "YOUR TOKEN",
+  "db": "MONGO DB URL",
   "color": "BLUE",
     "error": "RED",
     "success": "GREEN"
