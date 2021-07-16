@@ -6,6 +6,7 @@ const Discord = require("discord.js");
 const client = new Client({
   disableEveryone: true
 });
+require("discord-buttons")(client)
 //--------WELCOME---------
 const { createCanvas, loadImage, registerFont } = require("canvas");
 //--------MUSIC - CLIENT------
@@ -26,7 +27,33 @@ client.snipes = new Map();
   require(`./handlers/${handler}`)(client);
 });
 
+
+const mongoose = require("mongoose");
+
+mongoose
+  .connect(db, {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+  })
+  .then(console.log("Connected to mongo db"));
 const player = fs.readdirSync('./player').filter(file => file.endsWith('.js'));
+
+
+//RANKS
+const Levels = require("discord-xp");
+Levels.setURL(db);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 for (const file of player) {
@@ -39,6 +66,51 @@ client.on("ready", () => {
 
   client.user.setActivity("PARAS GAMING 🇮🇳");
 });
+
+
+client.on("clickMenu",async menu => {
+
+if(menu.values[0]== "APPLE"){
+
+
+
+	menu.channel.send(`I ALSO LIKE APPLE`)
+}
+
+
+if(menu.values[1]== "MANGO"){
+
+
+
+	menu.channel.send(`I ALSO LIKE MANGO`)
+
+
+}
+if(menu.values[3]== "BANANA"){
+
+
+
+	menu.channel.send(`I ALSO LIKE BANANA`)
+}
+
+
+
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 client.on("messageDelete",async (message) => {
@@ -86,6 +158,28 @@ return message.reply(`You are not allow to mention mass members!`)
 client.on("message", async message => {
   if (message.author.bot) return;
   if (!message.guild) return;
+
+
+
+        const randomXp = Math.floor(Math.random() * 98) + 1;
+        const level = await Levels.appendXp(
+          message.author.id,
+          message.guild.id,
+          randomXp
+        );
+        if (level) {
+          const user = await Levels.fetch(message.author.id, message.guild.id);
+          message.channel
+            .send(
+              ` ${message.author.username}, You just leveled up to level ${user.level}!`
+            )
+            .then((m) => m.delete({ timeout: 10000 }));
+        }
+      
+    
+
+
+
 //AFK SYSTEM 
  //IF YOU  WANT MAKE GLOABAL AFK SYSTEM  JUST  REMOVE SERVER  id
  //THAKKS FOR WATCHING 
@@ -120,98 +214,16 @@ client.on("message", async message => {
   }
 });
 client.on("guildMemberAdd", async member => {
-  let image = db.get(`bluebot_welcomeImage_${member.guild.id}`);
 
-  if (!image) {
-    let channel_id = db.get(`bluebot_welcomeChannel_${member.guild.id}`);
-    let channel = member.guild.channels.cache.get(channel_id);
-    if (channel === null || !channel) return;
-    let tex = db.get(`bluebot_welcomeText_${member.guild.id}`);
-    if (!tex)
-      tex = `**Welcome To \`${member.guild.name}\`\nYou are \`${member.guild.memberCount}th\` member**`;
-    let text = tex
-      .replace("{server.name}", member.guild.name)
-      .replace("{server.member.count}", member.guild.memberCount)
-      .replace("{server.id}", member.guild.id)
-      .replace(
-        "{server.human.count}",
-        member.guild.members.cache.filter(m => !m.user.bot).size
-      )
-      .replace(
-        "{server.bot.count}",
-        member.guild.members.cache.filter(m => m.user.bot).size
-      )
-      .replace("{member.name}", member.user.username)
-      .replace("{member.mention}", member)
-      .replace("{member.tag}", member.user.tag)
-      .replace("{member.id}", member.user.id)
-      .replace("{member.discriminstor}", member.user.discriminator);
-    channel.send(text);
-  }
+let message = `${member} welcome to ${member.guild.name}`
 
-  if (image) {
-    let user_name =
-      member.user.username.length > 9
-        ? `${member.user.username.substring(0, 9)}...`
-        : member.user.username;
-    let guild_name =
-      member.guild.name.length > 11
-        ? `${member.guild.name.substring(0, 11)}...`
-        : member.guild.name;
-    let canvas = createCanvas(1024, 450);
-    let ctx = canvas.getContext("2d");
-    let background = await loadImage(
-      "https://media.discordapp.net/attachments/740842537043886140/743030040991891476/welcome-image-blank.png?width=400&height=176"
-    );
-    ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
 
-    ctx.font = "65px abraham demo";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(`Hello ${user_name}#${member.user.discriminator}!`, 350, 115);
-    ctx.fillText(`Welcome to ${guild_name}`, 350, 245);
-    ctx.fillText(`You are ${member.guild.memberCount}'th member`, 350, 370);
+let channel = await client.db.get(`channel_${member.guild.id}`)
 
-    ctx.font = "30px abraham demo";
-    ctx.fillStyle = "#ccccff";
-    ctx.fillText(` `, 157, 420);
+if(!channel)return;
 
-    ctx.arc(180, 227, 135, 0, Math.PI * 2, true);
-    ctx.lineWidth = 7;
-    ctx.strokeStyle = "#3498db";
-    ctx.stroke();
-    ctx.closePath();
-    ctx.clip();
-
-    let avatar = await loadImage(
-      member.user.displayAvatarURL({ format: "png" })
-    );
-    ctx.drawImage(avatar, 45, 93, 270, 270);
-    let img = new Discord.MessageAttachment(canvas.toBuffer(), "welcome.png");
-
-    let channel_id = db.get(`bluebot_welcomeChannel_${member.guild.id}`);
-    let channel = member.guild.channels.cache.get(channel_id);
-    if (channel === null || !channel) return;
-    let tex = db.get(`bluebot_welcomeText_${member.guild.id}`);
-    if (!tex)
-      tex = `**Welcome To \`${member.guild.name}\`\nYou are \`${member.guild.memberCount}th\` member**`;
-    let text = tex
-      .replace("{server.name}", member.guild.name)
-      .replace("{server.member.count}", member.guild.memberCount)
-      .replace("{server.id}", member.guild.id)
-      .replace(
-        "{server.human.count}",
-        member.guild.members.cache.filter(m => !m.user.bot).size
-      )
-      .replace(
-        "{server.bot.count}",
-        member.guild.members.cache.filter(m => m.user.bot).size
-      )
-      .replace("{member.name}", member.user.username)
-      .replace("{member.mention}", member)
-      .replace("{member.tag}", member.user.tag)
-      .replace("{member.id}", member.user.id)
-      .replace("{member.discriminstor}", member.user.discriminator);
-    channel.send(text, img);
-  }
+client.channels.cache.get(channel).send(message)
+  
+  
 });
 client.login(token);
